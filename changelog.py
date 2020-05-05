@@ -156,6 +156,5 @@ for files in list_of_xml_files:
                                           changelog_time,
                                           changelog_text):
                 datetime_time = datetime.datetime.fromtimestamp(time)
-                log_text("%s - %s" % (datetime_time, name))
                 if args.verbose:
                     print("* %s - %s\n%s" % (datetime_time, name, text))
