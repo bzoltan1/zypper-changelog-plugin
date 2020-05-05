@@ -116,13 +116,14 @@ for files in list_of_xml_files:
 
     # Loop thru the packages listed in the repository cache files
     for package in root.findall('doc:package', namespaces={'doc': xml_ns}):
-        if args.expression:
-            pattern = re.compile(args.package)
-            if not pattern.match("%s" % package[0].text):
-                continue
-        else:
-            if args.package != package[0].text:
-                continue
+        if not args.all:
+            if args.expression:
+                pattern = re.compile(args.package)
+                if not pattern.match("%s" % package[0].text):
+                    continue
+            else:
+                if args.package != package[0].text:
+                    continue
 
         # Find the segment/offset of the header part of the rpm package
         for field in package[11].findall('rpm:header-range',
@@ -158,3 +159,5 @@ for files in list_of_xml_files:
                 datetime_time = datetime.datetime.fromtimestamp(time)
                 if args.verbose:
                     print("* %s - %s\n%s" % (datetime_time, name, text))
+                else:
+                    print("* %s - %s" % (datetime_time, name))
