@@ -21,7 +21,7 @@ Version:        0.1
 Release:        1%{?dist}
 Summary:        Changelog listing tool
 License:        
-URL:            https://github.com/bzoltan1/changelog.git
+URL:            https://github.com/bzoltan1/zypper-changelog.git
 Source:         zypper-changelog-0.1.tar.gz
 Requires:       python3
 BuildArch:      noarch
