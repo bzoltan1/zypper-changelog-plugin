@@ -20,7 +20,7 @@ Name:           zypper-changelog
 Version:        0.1 
 Release:        1%{?dist}
 Summary:        Changelog listing tool
-License:        
+License:        GPL-2.0-or-later 
 URL:            https://github.com/bzoltan1/zypper-changelog.git
 Source:         zypper-changelog-0.1.tar.gz
 Requires:       python3
