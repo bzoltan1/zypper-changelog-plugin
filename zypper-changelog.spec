@@ -31,16 +31,9 @@ This tool is to show the changelog of packages in the repository
 %prep
 %setup -q
 
-%build
-%configure
-%make_build
-
 %install
 mkdir -p %{buildroot}%{_bindir}/
 install -m 75d zypper-changelog %{buildroot}%{_bindir}/zypper-changelog
-
-%post
-%postun
 
 %files
 %doc README.md
