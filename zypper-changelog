@@ -29,6 +29,7 @@ from argparse import ArgumentParser
 import requests
 import rpm
 import xml.etree.ElementTree as ET
+import tempfile
 
 
 def log_text(text):
@@ -159,12 +160,16 @@ for files in list_of_xml_files:
                 continue
             # Dump the header to a temporary file as the ts.hdrFromFdno
             # needs a real file to process
-            with open('temp_header.rpm', 'w+b') as f:
-                f.write(rpm_header.content)
-                f.flush()
-            f.close()
+            header_file, header_filename = tempfile.mkstemp()
+            try:
+                with os.fdopen(header_file, 'w+b') as f:
+                    f.write(rpm_header.content)
+                    f.flush()
+                f.close()
+                h = readRpmHeader(ts, '%s' % header_filename)
+            finally:
+                os.remove(header_filename)
 
-            h = readRpmHeader(ts, 'temp_header.rpm')
             if h is None:
                 continue
 

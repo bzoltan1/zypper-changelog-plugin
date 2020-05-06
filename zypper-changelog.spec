@@ -33,7 +33,7 @@ This tool is to show the changelog of packages in the repository
 
 %install
 mkdir -p %{buildroot}%{_bindir}/
-install -m 75d zypper-changelog %{buildroot}%{_bindir}/zypper-changelog
+install -m 755 zypper-changelog %{buildroot}%{_bindir}/zypper-changelog
 
 %files
 %doc README.md
