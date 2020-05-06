@@ -75,3 +75,5 @@ $ sudo zypper ref -f
 * There is no need to run the tool as root.
 
 * Be prepared for long execution time even if the connection to the remote repositores are fast.Fetching the changelogs for openSUSE source repository may take 80-120 minutes even close to the servers.
+
+* The next step is to package this tool and integrate it with zipper. It means naming the tool to zypper-changelog and put it into /usr/sbin , then it will be executable by zypper changelog. Similar to /usr/sbin/zypper-log script
