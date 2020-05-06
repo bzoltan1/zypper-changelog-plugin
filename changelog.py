@@ -65,6 +65,18 @@ def parse_args():
         p.exit()
     return p
 
+def readRpmHeader(ts, filename):
+    # Read an rpm header
+    fd = os.open(filename, os.O_RDONLY)
+    h = None
+    try:
+        h = ts.hdrFromFdno(fd)
+    except rpm.error as e:
+        print(e)
+        h = None
+    os.close(fd)
+    return h
+
 
 parser = parse_args()
 args = parser.parse_args(sys.argv[1:])
@@ -149,10 +161,12 @@ for files in list_of_xml_files:
                 f.write(rpm_header.content)
                 f.flush()
             f.close()
-            fd = os.open('temp_header.rpm', os.O_RDONLY)
+
+            h = readRpmHeader(ts, 'temp_header.rpm')
+            if h==None:
+                continue
+
             # Parse the changelog, time and contributor's name
-            h = ts.hdrFromFdno(fd)
-            os.close(fd)
             changelog_name = h[rpm.RPMTAG_CHANGELOGNAME]
             changelog_time = h[rpm.RPMTAG_CHANGELOGTIME]
             changelog_text = h[rpm.RPMTAG_CHANGELOGTEXT]
