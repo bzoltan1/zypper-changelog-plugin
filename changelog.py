@@ -139,17 +139,20 @@ for files in list_of_xml_files:
                 rpm_header = requests.get(url,
                                           headers={'Range':
                                                    'bytes=0-%s' % (end)})
-            except requests.exceptions.RequestException as e:
-                raise SystemExit(e)
+                rpm_header.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                log_text(e)
                 continue
             # Dump the header to a temporary file as the ts.hdrFromFdno
             # needs a real file to process
             with open('temp_header.rpm', 'w+b') as f:
                 f.write(rpm_header.content)
                 f.flush()
+            f.close()
             fd = os.open('temp_header.rpm', os.O_RDONLY)
             # Parse the changelog, time and contributor's name
             h = ts.hdrFromFdno(fd)
+            os.close(fd)
             changelog_name = h[rpm.RPMTAG_CHANGELOGNAME]
             changelog_time = h[rpm.RPMTAG_CHANGELOGTIME]
             changelog_text = h[rpm.RPMTAG_CHANGELOGTEXT]
