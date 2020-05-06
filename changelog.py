@@ -65,6 +65,7 @@ def parse_args():
         p.exit()
     return p
 
+
 def readRpmHeader(ts, filename):
     # Read an rpm header
     fd = os.open(filename, os.O_RDONLY)
@@ -86,6 +87,7 @@ if args.debug:
 repository_list = args.repos.split(",")
 
 list_of_xml_files = []
+
 
 # Find the cache file of the repositories
 for root, dirs, files in os.walk("/var/cache/zypp/raw/"):
@@ -163,7 +165,7 @@ for files in list_of_xml_files:
             f.close()
 
             h = readRpmHeader(ts, 'temp_header.rpm')
-            if h==None:
+            if h is None:
                 continue
 
             # Parse the changelog, time and contributor's name
