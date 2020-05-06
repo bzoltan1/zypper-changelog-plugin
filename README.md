@@ -26,8 +26,8 @@ $ changelog.py [-h] [-d] [-v] [-e] [-p PACKAGE] [-r REPOS] [-a]
 
 ## Simple usecases
 To show all changelog for all packages in the openSUSE-Tumbleweed-Oss repository.
-This prcess may take very long time depending on how fast is the connection to the
-repositories
+This prcess may take very long time (even hours) depending on how fast is the connection to the
+repositories. 
 ```
 $ changelog.py -a -v -r repo-oss 
 ```
@@ -60,3 +60,18 @@ $ changelog.py -p MozillaFirefox -r repo-oss,repo-source
   
 * -e, --expression
   + Enable regular expression in package name
+  
+ ## Hints and ideas
+ * The best way to see what repositories are enabled on a system is
+```
+$ zypper -x ls
+```
+* The tool is using directly the URL of the repository server. So no mirrors are used.
+* To see the contributors of a package the source repository is the way to go. As a single source package can provide several binary packages and each binary package will have the same changelog. The openSUSE Tumbleweed source repository have 13k source packages.
+* The tool is using the primary.xml.gz files from the /var/cache/zypp/raw directories. If the content of those cache files are not in sync with the repository servers then the tool will fail. It is important to refresh the local repository cache:
+```
+$ sudo zypper ref -f
+```
+* There is no need to run the tool as root.
+
+* Be prepared for long execution time even if the connection to the remote repositores are fast.Fetching the changelogs for openSUSE source repository may take 80-120 minutes even close to the servers.
