@@ -1,0 +1,50 @@
+#
+# spec file for package zypper-changelog
+#
+# Copyright (c) 2020 SUSE LLC
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+
+# Please submit bugfixes or comments via https://bugs.opensuse.org/
+#
+
+
+Name:           zypper-changelog
+Version:        0.1 
+Release:        1%{?dist}
+Summary:        Changelog listing tool
+License:        
+URL:            https://github.com/bzoltan1/changelog.git
+Source:         zypper-changelog-0.1.tar.gz
+Requires:       python3
+BuildArch:      noarch
+
+%description
+This tool is to show the changelog of packages in the repository
+%prep
+%setup -q
+
+%build
+%configure
+%make_build
+
+%install
+mkdir -p %{buildroot}%{_bindir}/
+install -m 75d zypper-changelog %{buildroot}%{_bindir}/zypper-changelog
+
+%post
+%postun
+
+%files
+%doc README.md
+%license LICENSE
+%{_bindir}/zypper-changelog
+
+%changelog

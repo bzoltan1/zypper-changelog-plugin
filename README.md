@@ -21,7 +21,7 @@ and uses zypper
 
 ## How to use
 ```
-$ changelog.py [-h] [-d] [-v] [-e] [-p PACKAGE] [-r REPOS] [-a]
+$ zypper-changelog [-h] [-d] [-v] [-e] [-p PACKAGE] [-r REPOS] [-a]
 ```
 
 ## Simple usecases
@@ -29,16 +29,16 @@ To show all changelog for all packages in the openSUSE-Tumbleweed-Oss repository
 This prcess may take very long time (even hours) depending on how fast is the connection to the
 repositories. 
 ```
-$ changelog.py -a -v -r repo-oss 
+$ zypper-changelog -a -v -r repo-oss 
 ```
 To show the list contributors of Firefox in the openSUSE-Tumbleweed-Oss repository
 ```
-$ changelog.py -p MozillaFirefox -r repo-oss 
+$ zypper-changelog -p MozillaFirefox -r repo-oss 
 ```
 
 To show the changelogs of all vim* packages the openSUSE-Tumbleweed-Oss and binary and source repositories
 ```
-$ changelog.py -p MozillaFirefox -r repo-oss,repo-source
+$ zypper-changelog -p MozillaFirefox -r repo-oss,repo-source
 ```
 
 
