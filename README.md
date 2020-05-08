@@ -21,7 +21,7 @@ and uses zypper
 
 ## How to use
 ```
-$ zypper-changelog [-h] [-d] [-v] [-e] [-p PACKAGE] [-r REPOS] [-a]
+$ zypper-changelog.py [-h] [-d] [-c] [-e] [-p PACKAGES] [-r REPOS] [-a] [-u]
 ```
 
 ## Simple usecases
@@ -29,17 +29,22 @@ To show all changelog for all packages in the openSUSE-Tumbleweed-Oss repository
 This prcess may take very long time (even hours) depending on how fast is the connection to the
 repositories. 
 ```
-$ zypper-changelog -a -v -r repo-oss 
+$ zypper-changelog -a -r repo-oss 
 ```
 To show the list contributors of Firefox in the openSUSE-Tumbleweed-Oss repository
 ```
-$ zypper-changelog -p MozillaFirefox -r repo-oss 
+$ zypper-changelog -p MozillaFirefox -r repo-oss -c 
 ```
 
 To show the changelogs of all vim* packages the openSUSE-Tumbleweed-Oss and binary and source repositories
 ```
 $ zypper-changelog -p MozillaFirefox -r repo-oss,repo-source
 ```
+To show the changelogs of all packages updated on the next zypper up/dup
+```
+$ zypper-changelog -u
+```
+
 
 
 ## Options and parameters
@@ -55,11 +60,14 @@ $ zypper-changelog -p MozillaFirefox -r repo-oss,repo-source
 * -a, --all
   + Lists changelogs for all packages
   
-* -v, --verbose
-  + Print all the changelog text
+* -c, --commits
+  + Print anly the headline of the changelog
   
 * -e, --expression
   + Enable regular expression in package name
+
+* -u, --update
+  + Prints the changelogs of the upcoming system update
   
  ## Hints and ideas
  * The best way to see what repositories are enabled on a system is
@@ -75,5 +83,3 @@ $ sudo zypper ref -f
 * There is no need to run the tool as root.
 
 * Be prepared for long execution time even if the connection to the remote repositores are fast.Fetching the changelogs for openSUSE source repository may take 80-120 minutes even close to the servers.
-
-* The next step is to package this tool and integrate it with zipper. It means naming the tool to zypper-changelog and put it into /usr/sbin , then it will be executable by zypper changelog. Similar to /usr/sbin/zypper-log script

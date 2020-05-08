@@ -45,9 +45,9 @@ def parse_args():
     p.add_argument('-d', '--debug',
                    default=False, action='store_true', dest='debug',
                    help='debug mode')
-    p.add_argument('-v', '--verbose',
-                   default=False, action='store_true', dest='verbose',
-                   help='verbose mode')
+    p.add_argument('-c', '--commits',
+                   default=False, action='store_true', dest='commits',
+                   help='Lists only the headline of the change commits')
     p.add_argument('-e', '--expression',
                    default=False, action='store_true', dest='expression',
                    help='Enable regular expression in package name')
@@ -107,11 +107,22 @@ def get_updates():
 def local_changelog(package):
     zypp_process = subprocess.Popen(["rpm",
                                      "-q",
-                                     "--changelog",
                                      "%s" % package],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
     stdout_value, stderr_value = zypp_process.communicate()
+    newest = stdout_value.decode("utf-8").strip().split('\n')[-1]
+    search_result = re.search("^%s-(.*)-.*" % package, newest)
+    if search_result:
+        last_version = search_result.group(1)
+    zypp_process = subprocess.Popen(["rpm",
+                                     "-q",
+                                     "--changelog",
+                                     "%s-%s" % (package, last_version)],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+    stdout_value, stderr_value = zypp_process.communicate()
+#    print(stdout_value.decode("utf-8"))
     return stdout_value.decode("utf-8")
 
 
@@ -231,10 +242,16 @@ for files in list_of_xml_files:
                                           changelog_text):
                 dt = datetime.datetime.fromtimestamp(time).strftime("%a %b " +
                                                                     "%d %Y")
-                changelog += "* %s %s\n%s\n\n" % (dt, name, text)
+                if args.commits:
+                    changelog += "* %s %s\n" % (dt, name)
+                else:
+                    changelog += "* %s %s\n%s\n\n" % (dt, name, text)
 
-            local = str(local_changelog(package[0].text))
-            diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
-            d = [l for l in diff if l.startswith('+ ') or l.startswith('- ')]
-            if d:
-                print('\n'.join(d).replace('+ ', ''))
+            if args.update:
+                local = str(local_changelog(package[0].text))
+                diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
+                for l in diff:
+                    if l.startswith('+ '):
+                        print(l.replace('+ ', ''))
+            else:
+                print(changelog)
