@@ -87,6 +87,7 @@ def readRpmHeader(ts, filename):
 
 def get_updates():
     update_list, repo_list = (set([]), set([]))
+    arch=''
     zypp_process = subprocess.Popen(["zypper",
                                      "-x",
                                      "list-updates"],
