@@ -51,7 +51,7 @@ def parse_args():
     p.add_argument('-e', '--expression',
                    default=False, action='store_true', dest='expression',
                    help='Enable regular expression in package name')
-    p.add_argument("-p", "--packages", dest="packages", default=None,
+    p.add_argument("-p", "--packages", dest="packages", default='',
                    help="Package name \
                               or regular expression to match packages.")
     p.add_argument("-r", "--repositories",
