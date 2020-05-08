@@ -236,4 +236,5 @@ for files in list_of_xml_files:
             local = str(local_changelog(package[0].text))
             diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
             d = [l for l in diff if l.startswith('+ ') or l.startswith('- ')]
-            print('\n'.join(d).replace('+ ', ''))
+            if d:
+                print('\n'.join(d).replace('+ ', ''))
