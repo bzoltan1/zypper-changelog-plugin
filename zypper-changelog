@@ -38,7 +38,7 @@ def log_text(text):
 
 
 def parse_args():
-    p = ArgumentParser(prog='changelog.py',
+    p = ArgumentParser(prog='zypper-changelog',
                        description='Shows the changelog' +
                        'of one ore more packages.',
                        formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -66,7 +66,6 @@ def parse_args():
                    dest="update", default=False,
                    action='store_true',
                    help="Lists changelogs for all packages to be updated")
-
     if len(sys.argv[1:]) == 0:
         p.print_help()
         p.exit()
@@ -114,6 +113,8 @@ def local_changelog(package):
     newest = stdout_value.decode("utf-8").strip().split('\n')[-1]
     search_result = re.search("^%s-(.*)-.*" % package, newest)
     if search_result:
+        # Multiple version of the same package may be installed
+        # and we want to see the changelog of the latest.
         last_version = search_result.group(1)
     zypp_process = subprocess.Popen(["rpm",
                                      "-q",
@@ -122,7 +123,6 @@ def local_changelog(package):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
     stdout_value, stderr_value = zypp_process.communicate()
-#    print(stdout_value.decode("utf-8"))
     return stdout_value.decode("utf-8")
 
 
@@ -130,17 +130,13 @@ parser = parse_args()
 args = parser.parse_args(sys.argv[1:])
 if args.debug:
     log_text('\nargs: ' + str(sys.argv))
-
-
 if args.update:
     package_list, repository_list, arch = get_updates()
 else:
     repository_list = args.repos.split(",")
     package_list = args.packages.split(",")
-
 if args.packages:
     package_list = args.packages.split(",")
-
 
 list_of_xml_files = []
 
@@ -200,7 +196,6 @@ for files in list_of_xml_files:
             else:
                 if package[0].text not in package_list:
                     continue
-
         # Find the segment/offset of the header part of the rpm package
         for field in package[11].findall('rpm:header-range',
                                          namespaces={'rpm':
@@ -246,7 +241,6 @@ for files in list_of_xml_files:
                     changelog += "* %s %s\n" % (dt, name)
                 else:
                     changelog += "* %s %s\n%s\n\n" % (dt, name, text)
-
             if args.update:
                 local = str(local_changelog(package[0].text))
                 diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
