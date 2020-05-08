@@ -16,6 +16,11 @@ The tool is a python3 script what imports
 * requests
 * rpm
 * xml.etree.ElementTree
+* tempfile
+* difflib
+
+
+
 
 and uses zypper
 
