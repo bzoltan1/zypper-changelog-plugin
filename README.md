@@ -88,3 +88,5 @@ $ sudo zypper ref -f
 * There is no need to run the tool as root.
 
 * Be prepared for long execution time even if the connection to the remote repositores are fast.Fetching the changelogs for openSUSE source repository may take 80-120 minutes even close to the servers.
+
+* The /var/cache/zypp/raw/[REPOSITORZY]/repodata/ directory has a *repomd.xml file what points to the *other.xml.gz file. That file is about 25MB and it contains all changelogs for all packages. Dowinloading and parsing these file mayt be more efficient when the bandwidth to the servers is low.
