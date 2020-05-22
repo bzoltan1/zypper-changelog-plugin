@@ -87,7 +87,7 @@ def readRpmHeader(ts, filename):
 
 def get_updates():
     update_list, repo_list = (set([]), set([]))
-    arch=''
+    arch = ''
     zypp_process = subprocess.Popen(["zypper",
                                      "-x",
                                      "list-updates"],
@@ -112,7 +112,7 @@ def local_changelog(package):
                                     stderr=subprocess.PIPE)
     stdout_value, stderr_value = zypp_process.communicate()
     newest = stdout_value.decode("utf-8").strip().split('\n')[-1]
-    search_result = re.search("^%s-(.*)-.*" % package, newest)
+    search_result = re.search("^%s-(.*)-.*" % re.escape(package), newest)
     if search_result:
         # Multiple version of the same package may be installed
         # and we want to see the changelog of the latest.
