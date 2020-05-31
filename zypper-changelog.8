@@ -1,0 +1,42 @@
+.\" Manpage for zypper-lifecycle.
+.TH man 8 "31 May 2020" "0.1" "zypper-changelog man page"
+.SH NAME
+zypper-changelog \-  fetch changelogs of packages from the repositories
+.SH SYNOPSIS
+zypper-changelog [-h] [-d] [-c] [-e] [-p PACKAGES] [-r REPOS] [-a] [-u]
+.SH DESCRIPTION
+zypper-changelog is a tool to fetch the changelog of packages from the rpm 
+repositories. With rpm -q --changelog it is possible to list the changelogs
+of the installed packages, but there is no available tool what could list the
+changelogs of the packages not installed. This feature is useful before 
+installing or upgrading a package to see what changes are going to be installed.
+.SH OPTIONS
+.TP
+.B -p, --package [PACKAGE]
+Package name or regular expression to match packages.
+.TP
+.B -r,--repositorie [REPOS]
+Comma separated list of repositores to search for changelogs.
+.TP
+.B -h, --help
+Show the help message and exit
+.TP
+.B -a, --all
+Lists changelogs for all packages
+.TP
+.B -c, --commits
+Print anly the headline of the changelog
+.TP
+.B -e, --expression
+Enable regular expression in package name
+.TP
+.B -u, --update
+Prints the changelogs of the upcoming system update
+.SH RETURN VALUE
+zpper changelog returns the changelogs of the requested or to be updated packages.
+.SH SEE ALSO
+zypper(8)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Zoltan Balogh <zoltan.balogh@suse.com>

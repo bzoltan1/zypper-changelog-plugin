@@ -20,7 +20,7 @@ Name:           zypper-changelog-plugin
 Version:        0.1 
 Release:        1%{?dist}
 Summary:        Changelog listing tool
-License:        GPL-2.0-or-later 
+License:        GPL-2.0 
 URL:            https://github.com/bzoltan1/zypper-changelog-plugin.git
 Source:         zypper-changelog-plugin-0.1.tar.gz
 Requires:       python3
@@ -31,13 +31,17 @@ This tool is to show the changelog of packages in the repository
 %prep
 %setup -q
 
+%build
+
 %install
 mkdir -p %{buildroot}%{_bindir}/
 install -m 755 zypper-changelog %{buildroot}%{_bindir}/zypper-changelog
+mkdir -p %{buildroot}/usr/lib/zypper/commands %{buildroot}/%{_mandir}/man8
+install -m 644 zypper-changelog.8 %{buildroot}/%{_mandir}/man8/
 
 %files
+%defattr(-,root,root,-)
 %doc README.md
-%license LICENSE
 %{_bindir}/zypper-changelog
 
 %changelog
