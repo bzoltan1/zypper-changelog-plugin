@@ -43,5 +43,6 @@ install -m 644 zypper-changelog.8 %{buildroot}/%{_mandir}/man8/
 %defattr(-,root,root,-)
 %doc README.md
 %{_bindir}/zypper-changelog
+%{_mandir}/man8/*
 
 %changelog
