@@ -18,9 +18,9 @@
 
 Name:           zypper-changelog-plugin
 Version:        0.1 
-Release:        1%{?dist}
+Release:        0 
 Summary:        Changelog listing tool
-License:        GPL-2.0 
+License:        GPL-2.0-only
 Group:          System/Packages
 Supplements:    zypper
 URL:            https://github.com/bzoltan1/zypper-changelog-plugin.git
