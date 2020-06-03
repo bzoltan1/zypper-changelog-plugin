@@ -41,6 +41,7 @@ mkdir -p %{buildroot}/usr/lib/zypper/commands %{buildroot}/%{_mandir}/man8
 install -m 644 zypper-changelog.8 %{buildroot}/%{_mandir}/man8/
 
 %files
+%license LICENSE
 %doc README.md
 %{_bindir}/zypper-changelog
 %{_mandir}/man8/*
