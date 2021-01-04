@@ -25,6 +25,7 @@ Group:          System/Packages
 URL:            https://github.com/bzoltan1/zypper-changelog-plugin.git
 Source:         zypper-changelog-plugin-0.1.tar.gz
 Requires:       /usr/bin/python3
+Requires:       python3-requests
 BuildArch:      noarch
 
 %description
