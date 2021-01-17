@@ -55,7 +55,7 @@ def parse_args():
                    help="Package name \
                               or regular expression to match packages.")
     p.add_argument("-r", "--repositories",
-                   dest="repos", default="repo-oss",
+                   dest="repos", default="oss",
                    help="Comma separated list of repositores \
                               to search for changelogs.")
     p.add_argument("-a", "--all",
