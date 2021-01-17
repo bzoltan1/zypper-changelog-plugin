@@ -39,7 +39,7 @@ def log_text(text):
 
 def parse_args():
     p = ArgumentParser(prog='zypper-changelog',
-                       description='Shows the changelog' +
+                       description='Shows the changelog ' +
                        'of one ore more packages.',
                        formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('-d', '--debug',
