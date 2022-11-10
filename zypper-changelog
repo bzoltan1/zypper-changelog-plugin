@@ -236,6 +236,14 @@ for files in list_of_xml_files:
             for (name, time, text) in zip(changelog_name,
                                           changelog_time,
                                           changelog_text):
+                # In some cases the rpm data is in bytes and need to be 
+                # converted to strings
+                if type(name) == bytes:
+                    name_str = name.decode("utf-8")
+                    name = name_str
+                if type(text) == bytes:
+                    text_str = text.decode("utf-8")
+                    text = text_str
                 dt = datetime.datetime.fromtimestamp(time).strftime("%a %b " +
                                                                     "%d %Y")
                 if args.commits:
