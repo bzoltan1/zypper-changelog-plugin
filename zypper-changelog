@@ -34,7 +34,8 @@ import difflib
 
 
 def log_text(text):
-    print(text)
+    if args.debug:
+        print(text)
 
 
 def parse_args():
@@ -55,7 +56,7 @@ def parse_args():
                    help="Package name \
                               or regular expression to match packages.")
     p.add_argument("-r", "--repositories",
-                   dest="repos", default="oss",
+                   dest="repos", default="ALL",
                    help="Comma separated list of repositores \
                               to search for changelogs.")
     p.add_argument("-a", "--all",
@@ -63,7 +64,7 @@ def parse_args():
                    action='store_true',
                    help="Lists changelogs for all packages")
     p.add_argument("-u", "--update",
-                   dest="update", default=False,
+                   dest="update", default=True,
                    action='store_true',
                    help="Lists changelogs for all packages to be updated")
     if len(sys.argv[1:]) == 0:
@@ -145,9 +146,13 @@ list_of_xml_files = []
 for root, dirs, files in os.walk("/var/cache/zypp/raw/"):
     for file in files:
         if file.endswith("primary.xml.gz"):
-            for repository in repository_list:
-                if repository in root:
-                    list_of_xml_files.append(os.path.join(root, file))
+            if args.repos=="ALL":
+                list_of_xml_files.append(os.path.join(root, file))
+            else:
+                for repository in repository_list:
+                    log_text("Enabled repository: %s" % repository)
+                    if repository in root:
+                        list_of_xml_files.append(os.path.join(root, file))
 
 ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
                         rpm.RPMVSF_NOHDRCHK or
@@ -165,10 +170,12 @@ stdout_value, stderr_value = zypp_process.communicate()
 repo_tree = ET.ElementTree(ET.fromstring(stdout_value))
 repo_root = repo_tree.getroot()
 
+
 for files in list_of_xml_files:
     for repo in repo_root.iter('repo'):
         if repo.get('alias') in files:
             mirror_url = repo.find('url').text
+            log_text("Mirror URL: %s" % mirror_url)
 
     zcat_process = subprocess.Popen(["zcat",
                                      "%s" % files],
@@ -205,7 +212,7 @@ for files in list_of_xml_files:
             start = field.get('start')
             end = field.get('end')
             url = '%s/%s' % (mirror_url, package[10].get('href'))
-            log_text(url)
+            log_text("URL to fetch the rpm header from: %s" % url)
             try:
                 # Fetch the rpm header as it contains the changelogs
                 rpm_header = requests.get(url,
@@ -252,6 +259,9 @@ for files in list_of_xml_files:
                     changelog += "* %s %s\n%s\n\n" % (dt, name, text)
             if args.update:
                 local = str(local_changelog(package[0].text))
+                #text_file = open("local-%s" % package , "w")
+                #text_file.write(local)
+                #text_file.close()
                 diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
                 for line in diff:
                     if line.startswith('+ '):
