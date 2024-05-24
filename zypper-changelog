@@ -192,7 +192,7 @@ list_of_xml_files = []
 # Find the cache file of the repositories
 for root, dirs, files in os.walk("/var/cache/zypp/raw/"):
     for file in files:
-        if file.endswith("primary.xml.gz"):
+        if file.endswith("primary.xml.zst") or file.endswith("primary.xml.gz"):
             if args.repos == "ALL":
                 list_of_xml_files.append(os.path.join(root, file))
             else:
@@ -224,11 +224,12 @@ for files in list_of_xml_files:
             log_text(f"Mirror URL: {mirror_url}")
 
     try:
-        zcat_process = subprocess.Popen(
-            ["zcat", files],
+        zstdcat_process = subprocess.Popen(
+            ["zstdcat", files],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout_value, stderr_value = zcat_process.communicate()
+        stdout_value, stderr_value = zstdcat_process.communicate()
+
     except Exception as e:
         log_text(f"Error decompressing XML file: {e}")
         continue
