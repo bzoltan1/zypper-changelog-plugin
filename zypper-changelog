@@ -31,104 +31,147 @@ import rpm
 import xml.etree.ElementTree as ET
 import tempfile
 import difflib
+from time import sleep
 
 
 def log_text(text):
+    """Print debug information if debug mode is enabled."""
     if args.debug:
         print(text)
 
 
 def parse_args():
-    p = ArgumentParser(prog='zypper changelog',
-                       description='Shows the changelog' +
-                       'of one ore more packages.',
-                       formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('-d', '--debug',
-                   default=False, action='store_true', dest='debug',
-                   help='debug mode')
-    p.add_argument('-c', '--commits',
-                   default=False, action='store_true', dest='commits',
-                   help='Lists only the headline of the change commits')
-    p.add_argument('-e', '--expression',
-                   default=False, action='store_true', dest='expression',
-                   help='Enable regular expression in package name')
-    p.add_argument("-p", "--packages", dest="packages", default='',
-                   help="Package name \
-                              or regular expression to match packages.")
-    p.add_argument("-r", "--repositories",
-                   dest="repos", default="ALL",
-                   help="Comma separated list of repositories \
-                              to search for changelogs.")
-    p.add_argument("-a", "--all",
-                   dest="all", default=False,
-                   action='store_true',
-                   help="Lists changelogs for all packages")
-    p.add_argument("-u", "--update",
-                   dest="update", default=True,
-                   action='store_true',
-                   help="Lists changelogs for all packages to be updated")
+    """Parse command line arguments."""
+    p = ArgumentParser(
+        prog='zypper changelog',
+        description='Shows the changelog of one or more packages.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        '-d', '--debug',
+        default=False, action='store_true', dest='debug',
+        help='Enable debug mode for detailed output'
+    )
+    p.add_argument(
+        '-c', '--commits',
+        default=False, action='store_true', dest='commits',
+        help='List only the headline of the change commits'
+    )
+    p.add_argument(
+        '-e', '--expression',
+        default=False, action='store_true', dest='expression',
+        help='Enable regular expression in package name'
+    )
+    p.add_argument(
+        "-p", "--packages", dest="packages", default='',
+        help="Package name or regular expression to match packages."
+    )
+    p.add_argument(
+        "-r", "--repositories",
+        dest="repos", default="ALL",
+        help="Comma separated list of repositories to search for changelogs."
+    )
+    p.add_argument(
+        "-a", "--all",
+        dest="all", default=False,
+        action='store_true',
+        help="List changelogs for all packages"
+    )
+    p.add_argument(
+        "-u", "--update",
+        dest="update", default=True,
+        action='store_true',
+        help="List changelogs for all packages to be updated"
+    )
+    p.add_argument(
+        "--arch", dest="arch", default="all",
+        help=(
+            "Comma separated list of architectures to include "
+            "(default is all)."
+        )
+    )
     if len(sys.argv[1:]) == 0:
         p.print_help()
         p.exit()
     return p
 
 
-def readRpmHeader(ts, filename):
-    # Read an rpm header
+def read_rpm_header(ts, filename):
+    """Read the RPM header from a file."""
     fd = os.open(filename, os.O_RDONLY)
     h = None
     try:
         h = ts.hdrFromFdno(fd)
     except rpm.error as e:
-        print(e)
-        h = None
-    os.close(fd)
+        log_text(f"Error reading RPM header: {e}")
+    finally:
+        os.close(fd)
     return h
 
 
 def get_updates():
-    update_list, repo_list = (set([]), set([]))
+    """Fetch the list of updates from zypper."""
+    update_list, repo_list = set(), set()
     arch = ''
-    zypp_process = subprocess.Popen(["zypper",
-                                     "-x",
-                                     "--non-interactive",
-                                     "list-updates"],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-    stdout_value, stderr_value = zypp_process.communicate()
-    updates_tree = ET.ElementTree(ET.fromstring(stdout_value))
-    updates_root = updates_tree.getroot()
-    for update in updates_root.iter('update'):
-        update_list.add(update.get('name'))
-        repo_list.add(update.find('source').get('alias'))
-        if update.get('arch') not in ('src', 'noarch'):
-            arch = update.get('arch')
+    try:
+        zypp_process = subprocess.Popen(
+            ["zypper", "-x", "--non-interactive", "list-updates"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        stdout_value, stderr_value = zypp_process.communicate()
+        updates_tree = ET.ElementTree(ET.fromstring(stdout_value))
+        updates_root = updates_tree.getroot()
+        for update in updates_root.iter('update'):
+            update_list.add(update.get('name'))
+            repo_list.add(update.find('source').get('alias'))
+            if update.get('arch') not in ('src', 'noarch'):
+                arch = update.get('arch')
+    except Exception as e:
+        log_text(f"Error fetching updates: {e}")
     return update_list, repo_list, arch
 
 
 def local_changelog(package):
-    zypp_process = subprocess.Popen(["rpm",
-                                     "-q",
-                                     "%s" % package],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-    stdout_value, stderr_value = zypp_process.communicate()
-    newest = stdout_value.decode("utf-8").strip().split('\n')[-1]
-    search_result = re.search("^%s-(.*)-.*" % re.escape(package), newest)
-    if search_result:
-        # Multiple version of the same package may be installed
-        # and we want to see the changelog of the latest.
-        last_version = search_result.group(1)
-        zypp_process = subprocess.Popen(["rpm",
-                                         "-q",
-                                         "--changelog",
-                                         "%s-%s" % (package, last_version)],
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+    """Retrieve the changelog for a locally installed package."""
+    try:
+        zypp_process = subprocess.Popen(
+            ["rpm", "-q", package],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         stdout_value, stderr_value = zypp_process.communicate()
-        return stdout_value.decode("utf-8")
-    else:
-        return
+        newest = stdout_value.decode("utf-8").strip().split('\n')[-1]
+        search_result = re.search(f"^{re.escape(package)}-(.*)-.*", newest)
+        if search_result:
+            last_version = search_result.group(1)
+            zypp_process = subprocess.Popen(
+                ["rpm", "-q", "--changelog", f"{package}-{last_version}"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            stdout_value, stderr_value = zypp_process.communicate()
+            return stdout_value.decode("utf-8")
+    except Exception as e:
+        log_text(f"Error fetching local changelog: {e}")
+    return ""
+
+
+def fetch_rpm_header(url, end, retries=3, backoff_factor=1):
+    """Fetch the RPM header from a remote repository."""
+    for attempt in range(retries):
+        try:
+            response = requests.get(
+                url, headers={'Range': f'bytes=0-{end}'}, timeout=5
+            )
+            response.raise_for_status()
+            return response.content
+        except requests.exceptions.RequestException as e:
+            log_text(f"Error fetching RPM header (attempt {attempt + 1}): {e}")
+            sleep(backoff_factor * (2 ** attempt))
+    return None
+
+
+def decode_if_bytes(value):
+    """Decode a value if it is in bytes."""
+    return value.decode("utf-8") if isinstance(value, bytes) else value
 
 
 parser = parse_args()
@@ -143,130 +186,121 @@ else:
 if args.packages:
     package_list = args.packages.split(",")
 
+arch_list = args.arch.split(",")
+
 list_of_xml_files = []
 # Find the cache file of the repositories
 for root, dirs, files in os.walk("/var/cache/zypp/raw/"):
     for file in files:
         if file.endswith("primary.xml.gz"):
-            if args.repos=="ALL":
+            if args.repos == "ALL":
                 list_of_xml_files.append(os.path.join(root, file))
             else:
                 for repository in repository_list:
-                    log_text("Enabled repository: %s" % repository)
+                    log_text(f"Enabled repository: {repository}")
                     if repository in root:
                         list_of_xml_files.append(os.path.join(root, file))
 
-ts = rpm.TransactionSet("", (rpm._RPMVSF_NOSIGNATURES or
-                        rpm.RPMVSF_NOHDRCHK or
-                        rpm._RPMVSF_NODIGESTS or
-                        rpm.RPMVSF_NEEDPAYLOAD))
+# Initialize the RPM transaction set
+ts = rpm.TransactionSet("", (
+    rpm._RPMVSF_NOSIGNATURES or rpm.RPMVSF_NOHDRCHK or
+    rpm._RPMVSF_NODIGESTS or rpm.RPMVSF_NEEDPAYLOAD
+))
 
-# Get the available respostories from the xml outout of zypper
+# Get the available repositories from the XML output of zypper
 # and find the URLs of the repositories
-zypp_process = subprocess.Popen(["zypper",
-                                 "-x",
-                                 "lr"],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+zypp_process = subprocess.Popen(
+    ["zypper", "-x", "lr"],
+    stdout=subprocess.PIPE, stderr=subprocess.PIPE
+)
 stdout_value, stderr_value = zypp_process.communicate()
 repo_tree = ET.ElementTree(ET.fromstring(stdout_value))
 repo_root = repo_tree.getroot()
-
 
 for files in list_of_xml_files:
     for repo in repo_root.iter('repo'):
         if repo.get('alias') in files:
             mirror_url = repo.find('url').text
-            log_text("Mirror URL: %s" % mirror_url)
+            log_text(f"Mirror URL: {mirror_url}")
 
-    zcat_process = subprocess.Popen(["zcat",
-                                     "%s" % files],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-    stdout_value, stderr_value = zcat_process.communicate()
+    try:
+        zcat_process = subprocess.Popen(
+            ["zcat", files],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        stdout_value, stderr_value = zcat_process.communicate()
+    except Exception as e:
+        log_text(f"Error decompressing XML file: {e}")
+        continue
 
-    tree = ET.ElementTree(ET.fromstring(stdout_value))
+    try:
+        tree = ET.ElementTree(ET.fromstring(stdout_value))
+    except ET.ParseError as e:
+        log_text(f"Error parsing XML file: {e}")
+        continue
+
     root = tree.getroot()
     xml_ns = root.tag.split('}')[0].strip('{')
 
-    # Loop thru the packages listed in the repository cache files
+    # Loop through the packages listed in the repository cache files
     for package in root.findall('doc:package', namespaces={'doc': xml_ns}):
         if not args.all:
-            # skip foreign arch and source packages
-            if args.update and package[1].text not in ('%s' % arch, 'noarch'):
+            # Skip foreign arch and source packages
+            if args.update and package[1].text not in (arch, 'noarch'):
                 continue
             if args.expression:
-                match = False
-                for package_item in package_list:
-                    pattern = re.compile(package_item)
-                    if pattern.match("%s" % package[0].text):
-                        match = True
-                if not match:
+                if not any(
+                    re.compile(p).match(package[0].text) for p in package_list
+                ):
                     continue
             else:
                 if package[0].text not in package_list:
                     continue
-        # Find the segment/offset of the header part of the rpm package
-        for field in package[11].findall('rpm:header-range',
-                                         namespaces={'rpm':
-                                                     'http://linux.duke.edu' +
-                                                     '/metadata/rpm'}):
+        for field in package[11].findall(
+            'rpm:header-range',
+            namespaces={'rpm': 'http://linux.duke.edu/metadata/rpm'}
+        ):
             start = field.get('start')
             end = field.get('end')
-            url = '%s/%s' % (mirror_url, package[10].get('href'))
-            log_text("URL to fetch the rpm header from: %s" % url)
-            try:
-                # Fetch the rpm header as it contains the changelogs
-                rpm_header = requests.get(url,
-                                          headers={'Range':
-                                                   'bytes=0-%s' % (end)},
-                                          timeout=5)
-            except requests.ConnectionError as e:
-                log_text(e)
+            url = f'{mirror_url}/{package[10].get("href")}'
+            log_text(f"URL to fetch the rpm header from: {url}")
+
+            rpm_header_content = fetch_rpm_header(url, end)
+            if rpm_header_content is None:
                 continue
-            # Dump the header to a temporary file as the ts.hdrFromFdno
-            # needs a real file to process
-            header_file, header_filename = tempfile.mkstemp()
+
+            with tempfile.NamedTemporaryFile(delete=False) as f:
+                f.write(rpm_header_content)
+                f.flush()
+                header_filename = f.name
             try:
-                with os.fdopen(header_file, 'w+b') as f:
-                    f.write(rpm_header.content)
-                    f.flush()
-                f.close()
-                h = readRpmHeader(ts, '%s' % header_filename)
+                h = read_rpm_header(ts, header_filename)
             finally:
                 os.remove(header_filename)
             if h is None:
                 continue
-            # Parse the changelog, time and contributor's name
             changelog_name = h[rpm.RPMTAG_CHANGELOGNAME]
             changelog_time = h[rpm.RPMTAG_CHANGELOGTIME]
             changelog_text = h[rpm.RPMTAG_CHANGELOGTEXT]
             changelog = ''
-            for (name, time, text) in zip(changelog_name,
-                                          changelog_time,
-                                          changelog_text):
-                # In some cases the rpm data is in bytes and need to be 
-                # converted to strings
-                if type(name) == bytes:
-                    name_str = name.decode("utf-8")
-                    name = name_str
-                if type(text) == bytes:
-                    text_str = text.decode("utf-8")
-                    text = text_str
-                dt = datetime.datetime.fromtimestamp(time).strftime("%a %b " +
-                                                                    "%d %Y")
+            for name, time, text in zip(
+                changelog_name, changelog_time, changelog_text
+            ):
+                name = decode_if_bytes(name)
+                text = decode_if_bytes(text)
+                dt = datetime.datetime.fromtimestamp(time).strftime(
+                    "%a %b %d %Y"
+                )
                 if args.commits:
-                    changelog += "* %s %s\n" % (dt, name)
+                    changelog += f"* {dt} {name}\n"
                 else:
-                    changelog += "* %s %s\n%s\n\n" % (dt, name, text)
+                    changelog += f"* {dt} {name}\n{text}\n\n"
             if args.update:
                 local = str(local_changelog(package[0].text))
-                #text_file = open("local-%s" % package , "w")
-                #text_file.write(local)
-                #text_file.close()
                 diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
                 for line in diff:
                     if line.startswith('+ '):
                         print(line.replace('+ ', ''))
             else:
                 print(changelog)
+
