@@ -33,7 +33,6 @@ import tempfile
 import difflib
 from time import sleep
 
-
 def log_text(text):
     """Print debug information if debug mode is enabled."""
     if args.debug:
@@ -246,6 +245,12 @@ for files in list_of_xml_files:
     # Loop through the packages listed in the repository cache files
     for package in root.findall('doc:package', namespaces={'doc': xml_ns}):
         if not args.all:
+
+            # If `-u` is specified, only process packages from the update list
+            if args.update and package[0].text not in package_list:
+                continue
+
+            log_text(f"Starting with Package: {package[0].text} from {files}")
             # Skip foreign arch and source packages
             if args.update and package[1].text not in (arch, 'noarch'):
                 continue
@@ -296,6 +301,10 @@ for files in list_of_xml_files:
                     changelog += f"* {dt} {name}\n"
                 else:
                     changelog += f"* {dt} {name}\n{text}\n\n"
+            # Print the package name before printing the changelog
+            print(f"Package: {package[0].text}")
+            log_text("Changelog printed successfully")  # Debug print
+
             if args.update:
                 local = str(local_changelog(package[0].text))
                 diff = difflib.ndiff(local.split('\n'), changelog.split('\n'))
@@ -304,4 +313,7 @@ for files in list_of_xml_files:
                         print(line.replace('+ ', ''))
             else:
                 print(changelog)
+
+            log_text("Finished processing {package[0].text}")  # Debug print
+
 
