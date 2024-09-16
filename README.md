@@ -43,7 +43,7 @@ $ zypper-changelog -p MozillaFirefox -r repo-oss -c
 
 To show the changelogs of all vim* packages the openSUSE-Tumbleweed-Oss and binary and source repositories
 ```
-$ zypper-changelog -p MozillaFirefox -r repo-oss,repo-source
+$ zypper-changelog -p vim -r repo-oss,repo-source
 ```
 To show the changelogs of all packages updated on the next zypper up/dup
 ```
@@ -56,7 +56,7 @@ $ zypper-changelog -u
 * -p, --package [PACKAGE]
   + Package name or regular expression to match packages.
 
-* -r,--repositorie  [REPOS]
+* -r,--repositories [REPOS]
  + Comma separated list of repositores to search for changelogs.
 
 * -h, --help            
